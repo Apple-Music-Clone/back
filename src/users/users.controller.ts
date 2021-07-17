@@ -1,22 +1,23 @@
-import express from "express";
+import { Controller } from "../decorators/http/controller.decorator";
+import { Get } from "../decorators/http/method.decorator";
+import { Query } from "../decorators/http/params/query.decorator";
 import UsersService from "./users.service";
 
+// Definindo o controller e o path
+@Controller('/users')
 class UsersController {
-  public path = "/users";
-  public router = express.Router();
-  private service: UsersService;
+  // Pegando o service para usar nas rotas
+  constructor(public service: UsersService) {}
 
-  constructor() {
-    this.service = new UsersService();
-    this.initializeRoutes();
-  }
+  // Definindo a rota com o path "xxx", ficaria: "www.url.com.br/users/xxx"
+  @Get('xxx')
+  // Pegando query params "teste", ficaria: "www.url.com.br/users/xxx?teste=$1" 
+  // $1 = valor que passou
+  public async getUsers(@Query('teste') teste: string) {
+    // Pega todos os users
+    const users = await this.service.getAll();
 
-  public initializeRoutes(): void {
-    this.router.get(this.path, async (req, res) => {
-      const users = await this.service.getAll();
-
-      res.send(users);
-    });
+    return users;
   }
 }
 
