@@ -1,5 +1,6 @@
 import Connection from "../../../connection/connection";
 import { SelectQueryBuilder } from "./select/select_query_builder";
+// import { InsertQueryBuilder } from "./insert/insert_query_builder";
 
 // Definindo a classe abstrata do QueryBuilder que tem o select, (terá insert, update, etc)
 // E tem o getQuery(), que todos os metodos (insert, update, etc) tem como pegar a query
@@ -17,6 +18,10 @@ abstract class QueryBuilder<T = any> {
   public select<S = T>(fields: string[], tableName: string = this.tableName): SelectQueryBuilder<S> {
     return new SelectQueryBuilder(this.runner, fields, tableName);
   }
+
+  // public insert<I = T>(fields: string[], tableName: string = this.tableName): InsertQueryBuilder<I> {
+  //   return new InsertQueryBuilder(this.runner, fields, tableName);
+  // }
 
   public getQuery() {
     return [this.getSQL(), this.params] as const;
