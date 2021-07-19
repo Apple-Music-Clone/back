@@ -49,7 +49,7 @@ class Connection {
   // Cria o queryBuilder
   public build<T = any>(tableName: string) {
     // Instanciando SelectQueryBuilder
-    return new SelectQueryBuilder<T>(this, [], tableName);
+    return new InsertQueryBuilder<T>(this, [], tableName);
   }
 }
 

@@ -23,8 +23,7 @@ export class InsertQueryBuilder<T> extends QueryBuilder<T> {
     this.params.forEach((_, index) => {
       const comma = index === this.fields.length - 1 ? '' : ',';
 
-      // sqlParts.push(`\$${index}${comma} `);
-      sqlParts.push(`'${_}'${comma}`);
+      sqlParts.push(`\$${index + 1}${comma} `);
     });
     
     sqlParts.push(")");
