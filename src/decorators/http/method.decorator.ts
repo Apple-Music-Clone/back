@@ -25,17 +25,17 @@ export function Get(path?: string): MethodDecorator {
 }
 
 export function Post(path?: string): MethodDecorator {
-  return Method('get', path);
+  return Method('post', path);
 }
 
 export function Put(path?: string): MethodDecorator {
-  return Method('get', path);
+  return Method('put', path);
 }
 
 export function Patch(path?: string): MethodDecorator {
-  return Method('get', path);
+  return Method('patch', path);
 }
 
 export function Delete(path?: string): MethodDecorator {
-  return Method('get', path);
+  return Method('delete', path);
 }
