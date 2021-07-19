@@ -1,5 +1,6 @@
 import { Pool, QueryResult } from "pg";
 import { Service } from "../decorators/http/service.decorator";
+import { InsertQueryBuilder } from "../lib/orm/query_builder/insert/insert_query_builder";
 import { SelectQueryBuilder } from "../lib/orm/query_builder/select/select_query_builder";
 
 // Criando service de conexão
