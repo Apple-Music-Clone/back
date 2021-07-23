@@ -1,283 +1,175 @@
-import Connection from "../../../../connection/connection";
-import QueryBuilder from "../query_builder";
+import {QueryBuilder} from "../query_builder";
+import {Connection} from "../../../../connection/connection.interface";
+import {QueryRunner} from "../../query_runner/query_runner.interface";
+import {JoinAttribute, TableRef} from "../query-expression-map";
 
-export interface WhereCondition {
-  condition: string;
-  type: "and" | "or";
-  params: any;
-}
-
-export interface QueryJoin {
-  relation: string;
-  condition: string;
-  alias: string;
-  type: "inner" | "left" | "right" | "alter" | "cross";
-}
-
-export interface OrderBy {
-  field: string;
-  type: "asc" | "desc";
-}
-
-// Criando o SelectQueryBuilder que extende o QueryBuilder
 export class SelectQueryBuilder<T> extends QueryBuilder<T> {
-  // Todos os joins que foram passados para o queryBuilder
-  private joins: QueryJoin[] = [];
+    public from(table: TableRef) {
+        this.expressionMap.table = table;
 
-  // Todos as condições que foram passados para o queryBuilder
-  private conditions: WhereCondition[] = [];
+        return this;
+    }
 
-  // Todos as ordens que foram passados para o queryBuilder
-  private orders: OrderBy[] = [];
+    protected createSelectExpression() {
+        const tableRef = this.expressionMap.table
 
-  // Limit passado para o queryBuilder (Padrão "null")
-  private limitValue: number = -1;
+        const selection = this.expressionMap.selects.map((select) => {
+            if (select.selection === "*") {
+                return select.selection;
+            }
 
-  // Offset passado para o queryBuilder (Padrão "null")
-  private offsetValue: number = -1;
+            if (select.selection.includes(".")) {
+                return select.selection.split(".", 2).map((item) => TableRef.addQuotes(item)).join(".");
+            }
 
-  constructor(
-    public runner: Connection,
-    public fields: string[],
-    public tableName: string
-  ) {
-    super(runner);
-  }
+            let selectText = tableRef.columnRef(select.selection);
 
-  // Montando o SQL
-  public getSQL() {
-    // Pega todos os fields pro select
-    const fields = this.fields
-      .map((field) => {
-        // Se o field tiver algum "." ou tiver "*" (Exemplo.: public.User ou * ou User.*)
-        if (field.includes(".") || field.includes("*")) {
-          // Retorna o field diretamente
-          return field;
+            if (select.aliasName) {
+                selectText = selectText.concat(' AS ', TableRef.addQuotes(select.aliasName))
+            }
+
+            return selectText
+        }).join(',');
+
+        return `SELECT ${selection} FROM ${tableRef.ref} `;
+    }
+
+    protected createJoinExpression() {
+        let filterParts = [];
+
+        for (let i = 0; i < this.expressionMap.joinAttributes.length; i++) {
+            const join = this.expressionMap.joinAttributes[i];
+
+            if (join.direction === "inner") {
+                filterParts.push("INNER JOIN");
+            } else if (join.direction === "left") {
+                filterParts.push("LEFT JOIN");
+            }
+
+            filterParts.push(TableRef.addQuotes(join.relation));
+
+            if (join.alias) {
+                filterParts.push(TableRef.addQuotes(join.alias));
+            }
+
+            if (join.condition) {
+                filterParts.push(`ON ${join.condition}`);
+            }
         }
 
-        // Adiciona o nome da tabela e o field entre aspas duplas
-        return `"${this.tableName}"."${field}"`;
-      })
-      .join(",");
-
-    // Gerando nome da tabela
-    let table = this.tableName.includes(".")
-      ? this.tableName
-      : `"${this.tableName}"`;
-
-    // Montando as partes do SQL por array
-    let sqlParts = [`SELECT ${fields} FROM ${table}`];
-
-    // Se tiver algum JOIN é adicionado
-    if (this.joins.length > 0) {
-      sqlParts.push(this.parseJoinQuery());
+        return filterParts.join(" ").concat(" ");
     }
 
-    // Se tiver alguma condição é adicionado
-    if (this.conditions.length > 0) {
-      sqlParts.push(this.parseWhereQuery());
-    }
+    protected createLimitExpression() {
+        const {limit, offset} = this.expressionMap;
 
-    // Se tiver alguma ordem é adicionado
-    if (this.orders.length > 0) {
-      sqlParts.push(this.parseOrderQuery());
-    }
+        const sqlParts = [];
 
-    // Se tiver algum offset é adicionado
-    if (this.offsetValue >= 0) {
-      sqlParts.push(`OFFSET ${this.offsetValue}`);
-    }
-
-    // Se tiver algum limit é adicionado
-    if (this.limitValue >= 0) {
-      sqlParts.push(`LIMIT ${this.limitValue}`);
-    }
-
-    // Retorna juntando o array por espaços
-    return sqlParts.join(" ");
-  }
-
-  // Setando o tableName do from
-  public from(tableName: string) {
-    this.tableName = tableName;
-
-    return this;
-  }
-
-  // Where
-  // Adicionando a condição (com o AND por padrão)
-  public addWhere(condition: string, params?: any) {
-    this.conditions.push({ condition, params, type: "and" });
-
-    return this;
-  }
-
-  // Adicionando a condição (com o "OR")
-  public addOrWhere(condition: string, params?: any) {
-    this.conditions.push({ condition, params, type: "or" });
-
-    return this;
-  }
-
-  // Joins
-  // Adicionando todos os JOINS
-
-  public innerJoin(relation: string, alias: string, condition: string) {
-    this.joins.push({ relation, condition, alias, type: "inner" });
-
-    return this;
-  }
-
-  public leftJoin(relation: string, alias: string, condition: string) {
-    this.joins.push({ relation, condition, alias, type: "left" });
-
-    return this;
-  }
-
-  public rightJoin(relation: string, alias: string, condition: string) {
-    this.joins.push({ relation, condition, alias, type: "right" });
-
-    return this;
-  }
-
-  public alterJoin(relation: string, alias: string, condition: string) {
-    this.joins.push({ relation, condition, alias, type: "alter" });
-
-    return this;
-  }
-
-  public crossJoin(relation: string, alias: string, condition: string) {
-    this.joins.push({ relation, condition, alias, type: "cross" });
-
-    return this;
-  }
-
-  // Add order
-
-  public addOrder(field: string, type: OrderBy["type"] = "asc") {
-    this.orders.push({ field, type });
-
-    return this;
-  }
-
-  // Pagination
-
-  public limit(limit: number) {
-    this.limitValue = limit;
-
-    return this;
-  }
-
-  public offset(offset: number) {
-    this.offsetValue = offset;
-
-    return this;
-  }
-
-  // Parsers
-
-  private parseWhereQuery() {
-    // Inicia com o "WHERE"
-    let filterParts = ["WHERE"];
-
-    // Percorre todas as condições
-    for (let i = 0; i < this.conditions.length; i++) {
-      // Pega a condição
-      const condition = this.conditions[i];
-
-      // Se não for a primeira condição (para não adicionar o OR ou o AND no começo.
-      // Exemplo para não ficar.: SELECT * FROM public.User AND WHERE)
-      if (i > 0) {
-        if (condition.type === "or") {
-          filterParts.push("OR");
-        } else if (condition.type === "and") {
-          filterParts.push("AND");
+        if (typeof limit === "number" && !Number.isNaN(limit)) {
+            sqlParts.push(`LIMIT ${limit}`)
         }
-      }
 
-      filterParts.push(condition.condition);
+        if (typeof offset === "number" && !Number.isNaN(offset)) {
+            sqlParts.push(`OFFSET ${offset}`)
+        }
+
+        return sqlParts.join(" ").concat(" ");
     }
 
-    return filterParts.join(" ");
-  }
+    protected join(direction: 'inner' | 'left', table: TableRef, alias: string, condition: string, params?: Record<string, any>) {
+        this.setParameters(params ?? {});
 
-  private parseJoinQuery() {
-    let filterParts = [];
+        const joinAttribute: JoinAttribute = {
+            direction,
+            condition,
+            alias,
+            relation: table.ref,
+        };
 
-    // Percorre todas os joins
-    for (let i = 0; i < this.joins.length; i++) {
-      // Pega o join
-      const join = this.joins[i];
+        this.expressionMap.joinAttributes.push(joinAttribute);
 
-      // Verifica qual é o tipo do join e adiciona na parte do SQL
-      if (join.type === "inner") {
-        filterParts.push("INNER JOIN");
-      } else if (join.type === "left") {
-        filterParts.push("LEFT JOIN");
-      } else if (join.type === "right") {
-        filterParts.push("RIGHT JOIN");
-      } else if (join.type === "alter") {
-        filterParts.push("ALTER JOIN");
-      } else if (join.type === "cross") {
-        filterParts.push("CROSS JOIN");
-      }
-
-      // Adiciona a relação após ter adicionado o tipo do JOIN
-      filterParts.push(`"${join.relation}"`);
-
-      // Se tiver um alias no join
-      // Exemplo.: .... INNER JOIN public.User u
-      // o "u" é o alias da entidade
-      if (join.alias) {
-        filterParts.push(`"${join.alias}"`);
-      }
-
-      // Adicionando as condições do JOIN
-      if (join.condition) {
-        filterParts.push(`ON ${join.condition}`);
-      }
+        return this;
     }
 
-    return filterParts.join(" ");
-  }
-
-  private parseOrderQuery() {
-    // Inicia com o "ORDER BY"
-    let filterParts = ["ORDER BY"];
-    // Campos do ORDER
-    const fields = [];
-
-    // Percorrendo as ordens
-    for (let i = 0; i < this.orders.length; i++) {
-      // Pegando uma ordem
-      const order = this.orders[i];
-
-      // Verificando se for "desc", para adicionar o "DESC", pois o padrão é "ASC"
-      if (order.type === "desc") {
-        fields.push(`"${order.field}" DESC`);
-      } else {
-        fields.push(`"${order.field}"`);
-      }
+    public innerJoin(table: TableRef, alias: string, condition: string, params?: Record<string, any>) {
+        return this.join("inner", table, alias, condition, params);
     }
 
-    filterParts.push(fields.join(","));
+    public leftJoin(table: TableRef, alias: string, condition: string, params?: Record<string, any>) {
+        return this.join("left", table, alias, condition, params);
+    }
 
-    return filterParts.join(" ");
-  }
+    public where(where: string, parameters?: any): this {
+        return this.andWhere(where, parameters);
+    }
 
-  // Params
+    public andWhere(where: string, parameters?: any): this {
+        if (parameters) {
+            this.setParameters(parameters)
+        }
 
-  public setParams(params: any[]) {
-    this.params = params;
+        this.expressionMap.wheres.push({params: parameters, type: "and", condition: where});
 
-    return this;
-  }
+        return this;
+    }
 
-  // Returns
+    public orWhere(where: string, parameters?: any): this {
+        if (parameters) {
+            this.setParameters(parameters)
+        }
 
-  public getMany(): Promise<T[]> {
-    const [query, params] = this.getQuery();
+        this.expressionMap.wheres.push({params: parameters, type: "or", condition: where});
 
-    return this.runner.query(query, params);
-  }
+        return this;
+    }
+
+    public limit(value: number): this {
+        this.expressionMap.limit = value;
+
+        return this;
+    }
+
+    public offset(value: number): this {
+        this.expressionMap.offset = value;
+
+        return this;
+    }
+
+    public createQueryBuilder() {
+        return new (this.constructor as any)(this.connection, this.runner)
+    }
+
+    public subQuery() {
+        const qb = this.createQueryBuilder();
+
+        qb.expressionMap.subQuery = true;
+        qb.parentQueryBuilder = this;
+
+        return qb;
+    }
+
+    public getQuery(): string {
+        let sql = this.createSelectExpression()
+            .concat(
+                this.createJoinExpression(),
+                this.createWhereExpression(),
+                // this.createGroupByExpression(),
+                // this.createOrderByExpression(),
+                this.createLimitExpression()
+            ).trim()
+
+        if (this.expressionMap.subQuery) {
+            sql = `(${sql})`;
+        }
+
+        return sql;
+    }
+
+    public getMany() {
+        return this.execute().then((r) => r.records)
+    }
+
+    public getOne() {
+        return this.limit(1).execute().then((r) => r.records[0] ?? null)
+    }
 }

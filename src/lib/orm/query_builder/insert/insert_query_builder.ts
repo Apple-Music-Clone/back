@@ -1,45 +1,98 @@
-import Connection from "../../../../connection/connection";
-import QueryBuilder from "../query_builder";
+import {QueryBuilder} from "../query_builder";
+import {TableRef} from "../query-expression-map";
 
 export class InsertQueryBuilder<T> extends QueryBuilder<T> {
-  constructor(
-    public runner: Connection,
-    public fields: string[],
-    public tableName: string
-  ) {
-    super(runner);
-  }
+    protected createInsertExpression(): string {
+        const table = this.expressionMap.table;
+        const data = [].concat(this.expressionMap.valuesSet);
 
-  public getSQL() {
-    const fields = this.fields.join(",");
+        const fields = Array.from(
+            new Set(
+                data.flatMap((item) => Object.keys(item))
+            )
+        );
 
-    // Gerando nome da tabela
-    let table = this.tableName.includes(".")
-      ? this.tableName
-      : `"${this.tableName}"`;
+        const fieldNames = fields.map((field) => TableRef.addQuotes(field)).join(',');
 
-    const sqlParts = [`INSERT INTO ${table}(${fields}) VALUES(`];
+        const rows: any[] = data.map(item => {
+            return fields.map((field) => {
+                return item[field] ?? null;
+            })
+        });
 
-    this.params.forEach((_, index) => {
-      const comma = index === this.fields.length - 1 ? '' : ',';
+        const rowParams = rows.map((row, ri) => {
+            const rowParams = row.map((value) => {
+                return this.createParameter(value);
+            }).join(',');
 
-      sqlParts.push(`\$${index + 1}${comma} `);
-    });
-    
-    sqlParts.push(")");
+            return `(${rowParams})`
+        }).join(',')
 
-    return sqlParts.join(" ");
-  }
+        return `INSERT INTO ${table.ref}(${fieldNames}) VALUES ${rowParams} `;
+    }
 
-  public from(tableName: string) {
-    this.tableName = tableName;
+    protected createReturningExpress(): string {
+        if (!this.expressionMap.returning) {
+            return '';
+        }
 
-    return this;
-  }
+        const tableRef = this.expressionMap.table
 
-  public setParams(values: any[]) {
-    this.params = values;
+        const selection = this.expressionMap.returning.map((select) => {
+            if (select === "*") {
+                return select;
+            }
 
-    return this;
-  }
+            if (select.includes(".")) {
+                return select.split(".", 2).map((item) => TableRef.addQuotes(item)).join(".");
+            }
+
+            return tableRef.columnRef(select)
+        }).join(',');
+
+        return `RETURNING ${selection} `;
+    }
+
+    public addValue(data: any) {
+        this.expressionMap.valuesSet.push(data);
+
+        return this;
+    }
+
+    public addValues(data: any[]) {
+        this.expressionMap.valuesSet = this.expressionMap.valuesSet.concat(data);
+
+        return this;
+    }
+
+    public values(data: any | any[]) {
+        if (!Array.isArray(data)) {
+            data = [data];
+        }
+
+        this.expressionMap.valuesSet = data;
+
+        return this;
+    }
+
+    public into(table: TableRef) {
+        this.expressionMap.table = table;
+
+        return this;
+    }
+
+    public getQuery(): string {
+        return this.createInsertExpression().concat(this.createReturningExpress()).trim();
+    }
+
+    public save(): Promise<any> {
+        return this.execute().then(r => r.records);
+    }
+
+    public returning(fields: string[]) {
+        this.expressionMap.returning = fields;
+
+        return this;
+    }
+
 }

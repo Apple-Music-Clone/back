@@ -1,5 +1,5 @@
 enum Tables {
-  USER = "public.User",
+  USER = "user",
 }
 
 export default Tables;
