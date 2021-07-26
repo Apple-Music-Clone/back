@@ -1,10 +1,7 @@
-import {Pool, QueryResult} from "pg";
 import {Service} from "../decorators/http/service.decorator";
-import {QueryBuilder} from "../lib/orm/query_builder/query_builder";
 import {PostgresConnectionDriver} from "../lib/orm/drivers/postgres/postgres.driver";
 import {PostgresQueryRunner} from "../lib/orm/drivers/postgres/postgres.query_runner";
 import {SelectQueryBuilder} from "../lib/orm/query_builder/select/select_query_builder";
-import {TableRef} from "../lib/orm/query_builder/query-expression-map";
 
 
 @Service()

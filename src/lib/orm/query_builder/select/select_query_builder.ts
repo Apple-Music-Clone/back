@@ -11,7 +11,7 @@ export class SelectQueryBuilder<T> extends QueryBuilder<T> {
     }
 
     protected createSelectExpression() {
-        const tableRef = this.expressionMap.table
+        const tableRef = this.expressionMap.table;
 
         const selection = this.expressionMap.selects.map((select) => {
             if (select.selection === "*") {
@@ -28,7 +28,7 @@ export class SelectQueryBuilder<T> extends QueryBuilder<T> {
                 selectText = selectText.concat(' AS ', TableRef.addQuotes(select.aliasName))
             }
 
-            return selectText
+            return selectText;
         }).join(',');
 
         return `SELECT ${selection} FROM ${tableRef.ref} `;

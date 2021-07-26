@@ -22,8 +22,3 @@ export interface Connection<O extends object = any> extends Driver {
     options: O,
 }
 
-// host: string;
-// user: string;
-// password: string;
-// database: string;
-

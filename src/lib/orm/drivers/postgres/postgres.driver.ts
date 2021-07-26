@@ -38,8 +38,9 @@ export class PostgresConnectionDriver implements Connection<PoolConfig> {
     public escapeQueryWithParameters(sql: string, parameters: any): [string, any[]] {
         const escapedParameters: any[] = [];
 
-        if (!parameters || !Object.keys(parameters).length)
+        if (!parameters || !Object.keys(parameters).length) {
             return [sql, escapedParameters];
+        }
 
         sql = sql.replace(/:(\.\.\.)?([A-Za-z0-9_]+)/g, (full, isArray: string, key: string): string => {
             if (!parameters.hasOwnProperty(key)) {
@@ -62,8 +63,8 @@ export class PostgresConnectionDriver implements Connection<PoolConfig> {
 
             escapedParameters.push(value);
             return this.createParameter(key, escapedParameters.length - 1);
-        }); // todo: make replace only in value statements, otherwise problems
-        console.log('value escaped', escapedParameters)
+        });
+
         return [sql, escapedParameters];
     }
 
