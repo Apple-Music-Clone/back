@@ -39,6 +39,17 @@ export abstract class QueryBuilder<T = any> {
     return qb;
   }
 
+  public update() {
+    const qb =
+      new (require("./update/update_query_builder").UpdateQueryBuilder)(
+        this.connection,
+        this.runner
+      );
+    qb.expressionMap.queryType = "update";
+
+    return qb;
+  }
+
   public delete() {
     const qb =
       new (require("./delete/delete_query_builder").DeleteQueryBuilder)(

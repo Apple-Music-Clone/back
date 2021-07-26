@@ -43,14 +43,14 @@ class UsersService {
       .save();
   }
 
-  // public async updateUser(id: string, body: User): Promise<any> {
-  //   return this.connection
-  //     .build(Tables.USER)
-  //     .update(["name", "country", "devices"])
-  //     .addWhere(`"id" = $1`)
-  //     .setParams([id, body.name, body.country, body.devices])
-  //     .getSQL();
-  // }
+  public async updateUser(id: string, body: User): Promise<any> {
+    return this.connection
+      .build()
+      .update()
+      .table(this.table)
+      .where(`"id" = $1`)
+      .getQuery();
+  }
 
   public async deleteUser(id: string): Promise<void> {
     return this.connection

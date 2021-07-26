@@ -4,11 +4,11 @@ import {TableRef} from "../query-expression-map";
 export class UpdateQueryBuilder<T> extends QueryBuilder<T> {
 
     protected createUpdateExpression(): string {
-    //    UPDATE table SET ...
+    //    UPDATE table SET x = 1, y = 2, z = 3
         const table = this.expressionMap.table;
 
 
-        return `UPDATE ${table} SET `;
+        return `UPDATE ${table.ref} SET `;
     }
 
     public table(table: TableRef) {
@@ -70,7 +70,7 @@ export class UpdateQueryBuilder<T> extends QueryBuilder<T> {
     }
 
     public getQuery(): string {
-        return "";
+        return this.createUpdateExpression();
     }
 
 }
