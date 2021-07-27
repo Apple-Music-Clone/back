@@ -20,8 +20,8 @@ class UsersController {
   }
 
   @Post("")
-  public async createUser(@Body() body: User): Promise<User> {
-    return await this.service.createUser(body);
+  public async createUser(@Body() body: User): Promise<any> {
+    return await this.service.testTransaction();
   }
 
   @Patch("/:id")

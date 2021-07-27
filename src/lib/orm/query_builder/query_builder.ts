@@ -113,6 +113,12 @@ export abstract class QueryBuilder<T = any> {
     return `WHERE ${expressions} `;
   }
 
+  public useTransaction(useTransaction = true) {
+    this.expressionMap.useTransaction = useTransaction;
+
+    return this;
+  }
+
   public hasParameter(paramName: string): boolean {
     return (
       this.parentQueryBuilder?.hasParameter(paramName) ||
@@ -163,7 +169,14 @@ export abstract class QueryBuilder<T = any> {
 
   abstract getQuery(): string;
 
-  public execute() {
-    return this.runner.query(this.getQuery(), this.getParameters());
+  public async execute() {
+    const query = this.getQuery();
+    const params = this.getParameters();
+
+    if (this.expressionMap.useTransaction) {
+      return this.runner.transaction((runner) => runner.query(query, params));
+    }
+
+    return this.runner.query(query, params);
   }
 }

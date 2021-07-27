@@ -10,6 +10,7 @@ export class PostgresConnectionDriver implements Connection<PoolConfig> {
     }
 
     public query(query: string, params?: any[]): Promise<any> {
+        console.log(query);
         return this.pool.query(query, params);
     }
 

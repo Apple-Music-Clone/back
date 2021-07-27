@@ -3,6 +3,7 @@ import { Service } from "../decorators/http/service.decorator";
 import Tables from "../enums/tables.enums";
 import User from "./users.interface";
 import { TableRef } from "../lib/orm/query_builder/query-expression-map";
+import { QueryRunner } from "../lib/orm/query_runner/query_runner.interface";
 
 @Service()
 class UsersService {
@@ -48,8 +49,9 @@ class UsersService {
       .build()
       .update()
       .table(this.table)
-      .where(`"id" = $1`)
-      .getQuery();
+      .values(body)
+      .where(`"id" = :id`, { id })
+      .getQueryAndParameters();
   }
 
   public async deleteUser(id: string): Promise<void> {
@@ -59,6 +61,40 @@ class UsersService {
       .from(this.table)
       .where(`"id" = :id`, { id })
       .getQuery();
+  }
+
+  public testTransaction() {
+    return this.connection.transaction(async (db: QueryRunner) => {
+      await db
+        .build()
+        .insert()
+        .into(this.table)
+        .values({
+          uuid: "7424399d-8bed-412a-aeee-60746c5d5c36",
+          name: "LSN",
+        })
+        .save();
+
+      await db
+        .build()
+        .insert()
+        .into(this.table)
+        .values({
+          uuid: "01ec41de-502f-4b1b-841f-ae232ea80228",
+          name: "Testeeeeee",
+        })
+        .save();
+    });
+    // return this.connection
+    //   .build()
+    // .insert()
+    // .into(this.table)
+    // .values({
+    //   name: null,
+    // })
+    //   .returning(["*"])
+    //   .useTransaction()
+    //   .save();
   }
 }
 

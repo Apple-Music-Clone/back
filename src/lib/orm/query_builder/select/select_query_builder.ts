@@ -166,10 +166,10 @@ export class SelectQueryBuilder<T> extends QueryBuilder<T> {
     }
 
     public getMany() {
-        return this.execute().then((r) => r.records)
+        return this.execute();
     }
 
     public getOne() {
-        return this.limit(1).execute().then((r) => r.records[0] ?? null)
+        return this.limit(1).execute();
     }
 }
