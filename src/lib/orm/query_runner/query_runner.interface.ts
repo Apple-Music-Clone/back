@@ -1,5 +1,6 @@
 import { Connection } from "../../../connection/connection.interface";
 import { QueryBuilder } from "../query_builder/query_builder";
+import { Repository } from "../repository/repository.orm";
 import { QueryResult } from "./query_result.interface";
 
 export interface QueryRunner {

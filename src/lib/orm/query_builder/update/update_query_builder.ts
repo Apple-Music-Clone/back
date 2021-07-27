@@ -3,9 +3,12 @@ import { TableRef } from "../query-expression-map";
 
 export class UpdateQueryBuilder<T> extends QueryBuilder<T> {
   protected createUpdateExpression(): string {
-    //    UPDATE table SET x = 1
     const table = this.expressionMap.table;
-    const data = this.expressionMap.valuesSet[0] ?? {};
+    let data = this.expressionMap.valuesSet ?? {};
+
+    if (Array.isArray(data)) {
+      data = data[0] ?? {};
+    }
 
     const fields = Array.from(new Set(Object.keys(data)));
 
@@ -20,14 +23,44 @@ export class UpdateQueryBuilder<T> extends QueryBuilder<T> {
     return `UPDATE ${table.ref} SET ${setParams} `;
   }
 
+  protected createReturningExpression(): string {
+    if (!this.expressionMap.returning?.length) {
+      return "";
+    }
+
+    const tableRef = this.expressionMap.table;
+
+    const selection = this.expressionMap.returning
+      .map((select) => {
+        if (select === "*") {
+          return select;
+        }
+
+        if (select.includes(".")) {
+          return select
+            .split(".", 2)
+            .map((item) => TableRef.addQuotes(item))
+            .join(".");
+        }
+
+        return tableRef.columnRef(select);
+      })
+      .join(",");
+
+    return `RETURNING ${selection} `;
+  }
+
   public table(table: TableRef) {
     this.expressionMap.table = table;
 
     return this;
   }
 
-  public addValue(data: any) {
-    this.expressionMap.valuesSet.push(data);
+  public addValue(data: any | any[]) {
+    this.expressionMap.valuesSet = [].concat(
+      this.expressionMap.valuesSet,
+      data
+    );
 
     return this;
   }
@@ -39,10 +72,6 @@ export class UpdateQueryBuilder<T> extends QueryBuilder<T> {
   }
 
   public values(data: any | any[]) {
-    if (!Array.isArray(data)) {
-      data = [data];
-    }
-
     this.expressionMap.valuesSet = data;
 
     return this;
@@ -87,6 +116,18 @@ export class UpdateQueryBuilder<T> extends QueryBuilder<T> {
   }
 
   public getQuery(): string {
-    return this.createUpdateExpression().concat(this.createWhereExpression());
+    return this.createUpdateExpression()
+      .concat(this.createWhereExpression(), this.createReturningExpression())
+      .trim();
+  }
+
+  public save(): Promise<any> {
+    return this.execute().then((r) => {
+      if (Array.isArray(this.expressionMap.valuesSet)) {
+        return r.records;
+      }
+
+      return r.records[0];
+    });
   }
 }

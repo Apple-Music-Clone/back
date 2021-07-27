@@ -65,7 +65,7 @@ export class QueryExpressionMap {
 
     selectDistinct: boolean = false;
 
-    valuesSet: Record<string, any>[] = [];
+    valuesSet: Record<string, any> | Record<string, any>[] = {};
 
     returning: string[] = [];
 

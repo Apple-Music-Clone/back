@@ -1,15 +1,15 @@
 import { Controller } from "../decorators/http/controller.decorator";
 import { Delete, Get, Patch, Post } from "../decorators/http/method.decorator";
 import { Body } from "../decorators/http/params/body.decorator";
-import User from "./users.interface";
 import UsersService from "./users.service";
 import { Param } from "../decorators/http/params/param.decorator";
+import { User } from "./user.entity";
 
 @Controller("/users")
 class UsersController {
   constructor(public service: UsersService) {}
 
-  @Get("")
+  @Get()
   public async getUsers(): Promise<User[]> {
     return await this.service.getAllUsers();
   }
@@ -19,16 +19,17 @@ class UsersController {
     return this.service.getOneUser(id);
   }
 
-  @Post("")
+  @Post()
   public async createUser(@Body() body: User): Promise<any> {
-    return await this.service.testTransaction();
+    return await this.service.createUser(body);
   }
-
+  
   @Patch("/:id")
   public async updateUser(
     @Param("id") id: string,
     @Body() body: User
-  ): Promise<User> {
+    ): Promise<User> {
+    console.log(body);
     return this.service.updateUser(id, body);
   }
 

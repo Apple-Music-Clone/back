@@ -1,6 +1,9 @@
 import { Service } from "../decorators/http/service.decorator";
 import { PostgresConnectionDriver } from "../lib/orm/drivers/postgres/postgres.driver";
 import { PostgresQueryRunner } from "../lib/orm/drivers/postgres/postgres.query_runner";
+import { Entity } from "../lib/orm/entity";
+import { Repository } from "../lib/orm/repository/repository.orm";
+import { Class } from "../lib/utils/utils";
 
 @Service()
 export class DatabaseService {
@@ -25,5 +28,12 @@ export class DatabaseService {
 
   get transaction() {
     return this.runner.transaction.bind(this.runner);
+  }
+
+  public repositoryFor<E>(entity: Class<E>): Repository<E> {
+    return new Repository<E>(
+      this.runner,
+      Reflect.getMetadata("entity:entity", entity)
+    );
   }
 }

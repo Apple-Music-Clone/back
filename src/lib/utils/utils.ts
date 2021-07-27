@@ -1,6 +1,6 @@
 import express from "express";
 
-export type Class<T> = new (...args: any[]) => T
+export type Class<T> = new (...args: any[]) => T;
 
 const singletons = new Map<Class<any>, any>();
 
@@ -8,7 +8,9 @@ function initialize<T>(klass: Class<T>): T {
   // Pegando todas as dependências da classe, pois necessita-se ser de dentro para fora
   // Exemplo: Temos o UserController, e ele usa o UserService e o UserService usa o Connection
   // Primeiro temos que setar inicializar o Connection, depois o UserServie e depois o Controller
-  const deps = (Reflect.getMetadata("design:paramtypes", klass) ?? []).map(getInstance);
+  const deps = (Reflect.getMetadata("design:paramtypes", klass) ?? []).map(
+    getInstance
+  );
 
   return new klass(...deps);
 }
@@ -30,15 +32,25 @@ export function getInstance<T>(klass: Class<T>): T {
   return instance;
 }
 
-export function createParamDecorator<T>(fn: (req: express.Request, res: express.Response, options?: T) => any) {
+export function createParamDecorator<T>(
+  fn: (
+    req: express.Request,
+    res: express.Response,
+    options?: T,
+    target?: any,
+    key?: string | symbol,
+    index?: number
+  ) => any
+) {
   return (options?: T): ParameterDecorator => {
     return (target, key, index) => {
-      const decorators = Reflect.getMetadata("paramdecorators", target.constructor) ?? new Map();
+      const decorators =
+        Reflect.getMetadata("paramdecorators", target.constructor) ?? new Map();
       const current = decorators.get(key) ?? [];
-      
-      decorators.set(key, current.concat({index, options, fn}))
+
+      decorators.set(key, current.concat({ index, options, fn }));
 
       Reflect.defineMetadata("paramdecorators", decorators, target.constructor);
-    }
+    };
   };
 }

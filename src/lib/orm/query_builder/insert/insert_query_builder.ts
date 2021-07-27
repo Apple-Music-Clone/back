@@ -35,7 +35,7 @@ export class InsertQueryBuilder<T> extends QueryBuilder<T> {
     return `INSERT INTO ${table.ref}(${fieldNames}) VALUES ${rowParams} `;
   }
 
-  protected createReturningExpress(): string {
+  protected createReturningExpression(): string {
     if (!this.expressionMap.returning?.length) {
       return "";
     }
@@ -62,8 +62,11 @@ export class InsertQueryBuilder<T> extends QueryBuilder<T> {
     return `RETURNING ${selection} `;
   }
 
-  public addValue(data: any) {
-    this.expressionMap.valuesSet.push(data);
+  public addValue(data: any | any[]) {
+    this.expressionMap.valuesSet = [].concat(
+      this.expressionMap.valuesSet,
+      data
+    );
 
     return this;
   }
@@ -75,10 +78,6 @@ export class InsertQueryBuilder<T> extends QueryBuilder<T> {
   }
 
   public values(data: any | any[]) {
-    if (!Array.isArray(data)) {
-      data = [data];
-    }
-
     this.expressionMap.valuesSet = data;
 
     return this;
@@ -92,12 +91,18 @@ export class InsertQueryBuilder<T> extends QueryBuilder<T> {
 
   public getQuery(): string {
     return this.createInsertExpression()
-      .concat(this.createReturningExpress())
+      .concat(this.createReturningExpression())
       .trim();
   }
 
   public save(): Promise<any> {
-    return this.execute();
+    return this.execute().then((r) => {
+      if (Array.isArray(this.expressionMap.valuesSet)) {
+        return r.records;
+      }
+
+      return r.records[0];
+    });
   }
 
   public returning(fields: string[]) {
