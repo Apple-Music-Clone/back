@@ -1,5 +1,5 @@
 import { Class } from "../../utils/utils";
-import { Entity } from "../entity";
+import { Entity } from "../entity/entity";
 import { QueryRunner } from "../query_runner/query_runner.interface";
 
 export class Repository<E> {

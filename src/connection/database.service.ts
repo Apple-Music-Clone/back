@@ -1,7 +1,8 @@
 import { Service } from "../decorators/http/service.decorator";
 import { PostgresConnectionDriver } from "../lib/orm/drivers/postgres/postgres.driver";
 import { PostgresQueryRunner } from "../lib/orm/drivers/postgres/postgres.query_runner";
-import { Entity } from "../lib/orm/entity";
+import { Entity } from "../lib/orm/entity/entity";
+import { TableRef } from "../lib/orm/query_builder/query-expression-map";
 import { Repository } from "../lib/orm/repository/repository.orm";
 import { Class } from "../lib/utils/utils";
 

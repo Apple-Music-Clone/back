@@ -1,9 +1,11 @@
 import { DatabaseService } from "../connection/database.service";
 import { Service } from "../decorators/http/service.decorator";
 import Tables from "../enums/tables.enums";
+import { EntityManager } from "../lib/orm/entity/entity.manager";
 import { TableRef } from "../lib/orm/query_builder/query-expression-map";
 import { QueryRunner } from "../lib/orm/query_runner/query_runner.interface";
 import { Repository } from "../lib/orm/repository/repository.orm";
+import { Teste } from "../teste.entity";
 import { User } from "./user.entity";
 
 @Service()
@@ -14,6 +16,26 @@ class UsersService {
 
   constructor(public connection: DatabaseService) {
     this.repository = this.connection.repositoryFor(User);
+
+    // const testeRepository = this.connection.repositoryFor(Teste);
+
+    // this.connection.transaction(async (db) => {
+    //   await db.query("DROP TABLE IF EXISTS public.user", []);
+    //   await db.query("DROP TABLE IF EXISTS teste", []);
+
+    //   const testeTableSql = new EntityManager(
+    //     testeRepository.entity,
+    //     this.connection.runner
+    //   ).createTable();
+
+    //   const userTableSql = new EntityManager(
+    //     this.repository.entity,
+    //     this.connection.runner
+    //   ).createTable();
+
+    //   await db.query(testeTableSql, []);
+    //   await db.query(userTableSql, []);
+    // });
   }
 
   public async getAllUsers(): Promise<User[]> {
@@ -72,29 +94,29 @@ class UsersService {
     //   .getQuery();
   }
 
-  // public testTransaction() {
-  //   return this.connection.transaction(async (db: QueryRunner) => {
-  //     await db
-  //       .build()
-  //       .insert()
-  //       .into(this.table)
-  //       .values({
-  //         uuid: "7424399d-8bed-412a-aeee-60746c5d5c36",
-  //         name: "LSN",
-  //       })
-  //       .save();
+  public testTransaction() {
+    return this.connection.transaction(async (db: QueryRunner) => {
+      await db
+        .build()
+        .insert()
+        .into(this.table)
+        .values({
+          uuid: "7424399d-8bed-412a-aeee-60746c5d5c36",
+          name: "LSN",
+        })
+        .save();
 
-  //     await db
-  //       .build()
-  //       .insert()
-  //       .into(this.table)
-  //       .values({
-  //         uuid: "01ec41de-502f-4b1b-841f-ae232ea80228",
-  //         name: "Testeeeeee",
-  //       })
-  //       .save();
-  //   });
-  // }
+      await db
+        .build()
+        .insert()
+        .into(this.table)
+        .values({
+          uuid: "01ec41de-502f-4b1b-841f-ae232ea80228",
+          name: "Testeeeeee",
+        })
+        .save();
+    });
+  }
 }
 
 export default UsersService;

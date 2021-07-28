@@ -1,7 +1,7 @@
-import { ColumnOptions } from "../../decorators/orm/column.decorator";
-import { EntityOptions } from "../../decorators/orm/entity.decorator";
-import { Class } from "../utils/utils";
-import { TableRef } from "./query_builder/query-expression-map";
+import { ColumnOptions } from "../../../decorators/orm/column.decorator";
+import { EntityOptions } from "../../../decorators/orm/entity.decorator";
+import { Class } from "../../utils/utils";
+import { TableRef } from "../query_builder/query-expression-map";
 
 export class Entity<T> {
   constructor(public entity: Class<T>) {}

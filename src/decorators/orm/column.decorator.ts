@@ -18,6 +18,8 @@ export interface ColumnOptions {
   unique?: boolean;
   primary?: boolean;
   autoIncrement?: boolean;
+  default?: any;
+  reference?: string;
 }
 
 export function Column(options: ColumnOptions): PropertyDecorator {

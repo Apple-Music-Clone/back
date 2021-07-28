@@ -1,4 +1,4 @@
-import { Entity as EntityClass } from "../../lib/orm/entity";
+import { Entity as EntityClass } from "../../lib/orm/entity/entity";
 
 export interface EntityOptions {
   name?: string;
