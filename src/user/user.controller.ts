@@ -23,6 +23,7 @@ import {
 } from 'src/lib/decorators/oauth.decorator';
 import { SanitizePipe } from 'src/lib/pipes/sanitize.pipe';
 import { UserDto } from './dto/user.dto';
+import { Suggestion } from './interfaces/suggestions';
 
 @ApiTags('Users')
 @Controller('users')
@@ -48,6 +49,11 @@ class UserController {
   @Get('/me')
   public async getMe(@CurrentUser() user: User): Promise<User> {
     return await this.service.getOneUser(user.id);
+  }
+
+  @Get('/suggestions')
+  public async getSuggestions(): Promise<Suggestion[]> {
+    return this.service.getSuggestions();
   }
 
   @Get('/:id')

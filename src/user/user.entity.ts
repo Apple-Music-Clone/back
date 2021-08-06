@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { Artist } from 'src/artist/artist.entity';
 import { BCryptTransformer } from 'src/lib/bcrypt';
@@ -15,6 +16,10 @@ export const userBaseRelations: string[] = [
 
 @Entity()
 export class User extends BaseEntity<User> {
+  @ApiProperty({
+    type: 'string',
+    name: 'name',
+  })
   @Column()
   public name: string;
 
