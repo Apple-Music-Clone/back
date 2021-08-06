@@ -5,56 +5,31 @@ import { EntityManager } from "../lib/orm/entity/entity.manager";
 import { TableRef } from "../lib/orm/query_builder/query-expression-map";
 import { QueryRunner } from "../lib/orm/query_runner/query_runner.interface";
 import { Repository } from "../lib/orm/repository/repository.orm";
-import { Teste } from "../teste.entity";
+// import { Playlist } from "../playlist/playlist.entity";
 import { User } from "./user.entity";
 
 @Service()
 class UsersService {
-  public table: TableRef = new TableRef(Tables.USER, "public");
-
-  public repository: Repository<User>;
-
-  constructor(public connection: DatabaseService) {
-    this.repository = this.connection.repositoryFor(User);
-
-    // const testeRepository = this.connection.repositoryFor(Teste);
-
-    // this.connection.transaction(async (db) => {
-    //   await db.query("DROP TABLE IF EXISTS public.user", []);
-    //   await db.query("DROP TABLE IF EXISTS teste", []);
-
-    //   const testeTableSql = new EntityManager(
-    //     testeRepository.entity,
-    //     this.connection.runner
-    //   ).createTable();
-
-    //   const userTableSql = new EntityManager(
-    //     this.repository.entity,
-    //     this.connection.runner
-    //   ).createTable();
-
-    //   await db.query(testeTableSql, []);
-    //   await db.query(userTableSql, []);
-    // });
+  constructor(public connection: any) {
   }
 
   public async getAllUsers(): Promise<User[]> {
-    return this.repository.findAll();
-    // return (
-    //   this.connection
-    //     .build()
-    //     .select(["*"])
-    //     .from(this.table)
-    //     // .innerJoin(new TableRef("Friendship"), "fs", '"fs"."user_id" = "User"."id"')
-    //     .where("1=:id", { id: 1 })
-    //     .andWhere("'2'=:name", { name: "lucas buchalla sesti" })
-    //     .orWhere("'3'=:slug", { slug: "lucas-buchalla-sesti" })
-    //     .getMany()
-    // );
+    // const columnNames = this.repository.entity.columnNames;
+
+    return this.connection
+      .build()
+      // .select(columnNames)
+      // .from(this.table)
+      // .leftJoin(
+      //   this.playlistRepository.entity.ref,
+      //   "p",
+      //   `"p"."user_id" = ${this.repository.entity.ref.ref}."id"`
+      // )
+      .getMany();
   }
 
   public async getOneUser(id: string): Promise<any> {
-    return this.repository.findOne(id);
+    // return this.repository.findOne(id);
     // return this.connection
     //   .build()
     //   .select(["*"])
@@ -67,14 +42,14 @@ class UsersService {
     return this.connection
       .build()
       .insert()
-      .into(this.table)
+      // .into(this.table)
       .values(body)
       .returning(["*"])
       .save();
   }
 
   public async updateUser(id: string, body: User): Promise<any> {
-    return this.repository.updateOne(id, body);
+    // return this.repository.updateOne(id, body);
     // return this.connection
     //   .build()
     //   .update()
@@ -85,7 +60,7 @@ class UsersService {
   }
 
   public async deleteUser(id: string): Promise<void> {
-    await this.repository.deleteOne(id);
+    // await this.repository.deleteOne(id);
     // return this.connection
     //   .build()
     //   .delete()
@@ -94,29 +69,29 @@ class UsersService {
     //   .getQuery();
   }
 
-  public testTransaction() {
-    return this.connection.transaction(async (db: QueryRunner) => {
-      await db
-        .build()
-        .insert()
-        .into(this.table)
-        .values({
-          uuid: "7424399d-8bed-412a-aeee-60746c5d5c36",
-          name: "LSN",
-        })
-        .save();
-
-      await db
-        .build()
-        .insert()
-        .into(this.table)
-        .values({
-          uuid: "01ec41de-502f-4b1b-841f-ae232ea80228",
-          name: "Testeeeeee",
-        })
-        .save();
-    });
-  }
+  // public testTransaction() {
+  //   return this.connection.transaction(async (db: QueryRunner) => {
+  //     await db
+  //       .build()
+  //       .insert()
+  //       .into(this.table)
+  //       .values({
+  //         uuid: "7424399d-8bed-412a-aeee-60746c5d5c36",
+  //         name: "LSN",
+  //       })
+  //       .save();
+  //
+  //     await db
+  //       .build()
+  //       .insert()
+  //       .into(this.table)
+  //       .values({
+  //         uuid: "01ec41de-502f-4b1b-841f-ae232ea80228",
+  //         name: "Testeeeeee",
+  //       })
+  //       .save();
+  //   });
+  // }
 }
 
 export default UsersService;

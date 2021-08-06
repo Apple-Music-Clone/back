@@ -15,6 +15,10 @@ export class EntityManager<E> {
 
       let type: string = col.type;
 
+      if (col.autoIncrement) {
+        type = 'SERIAL';
+      }
+
       if (length >= 0 && col.type === "varchar") {
         type = type.concat(`(${length})`);
       }

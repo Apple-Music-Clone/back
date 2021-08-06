@@ -1,17 +1,23 @@
-import { Column } from "../decorators/orm/column.decorator";
-import { Entity } from "../decorators/orm/entity.decorator";
+import {Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {User} from "../users/user.entity";
+import {BaseEntity} from "../base.entity";
+import {Music} from "../music/music.entity";
 
 @Entity()
-export class Playlist {
-  @Column({ type: "integer", primary: true, autoIncrement: true })
-  public id: string;
+export class Playlist extends BaseEntity {
+    @Column()
+    public coverImage: string;
 
-  @Column({ type: "varchar" })
-  public coverImage: string;
+    @Column()
+    public title: string;
 
-  @Column({ type: "varchar" })
-  public title: string;
+    @ManyToOne(() => User, user => user.playlists)
+    public user: User;
 
-  @Column({ type: "integer", reference: '"user"("id")', exclude: true })
-  public user_id: string;
+    @ManyToMany(() => User, user => user.favoritePlaylists)
+    public usersFavorite: User[];
+
+    @ManyToMany(() => Music, music => music.playlists)
+    @JoinTable()
+    public musics: Music[];
 }

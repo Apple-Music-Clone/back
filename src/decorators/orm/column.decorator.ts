@@ -20,6 +20,7 @@ export interface ColumnOptions {
   autoIncrement?: boolean;
   default?: any;
   reference?: string;
+  exclude?: boolean;
 }
 
 export function Column(options: ColumnOptions): PropertyDecorator {

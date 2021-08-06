@@ -14,7 +14,9 @@ export class Entity<T> {
   }
 
   get columnNames(): string[] {
-    return Array.from(this.columns.values()).map((col) => col.name);
+    return Array.from(this.columns.values())
+      .filter((col) => !col.exclude)
+      .map((col) => col.name);
   }
 
   get options(): EntityOptions {

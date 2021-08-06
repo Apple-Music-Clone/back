@@ -1,29 +1,34 @@
-import { Column } from "../decorators/orm/column.decorator";
-import { Entity } from "../decorators/orm/entity.decorator";
-import { Teste } from "../teste.entity";
+import {Column, Entity, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Playlist} from "../playlist/playlist.entity";
+import {BaseEntity} from "../base.entity";
+import {Music} from "../music/music.entity";
+import {Artist} from "../artist.entity";
 
 @Entity()
-export class User {
-  @Column({ type: "integer", primary: true })
-  public id: string;
-
-  @Column({ type: "uuid" })
-  public uuid: string;
-
-  @Column({ type: "varchar" })
+export class User extends BaseEntity {
+  @Column()
   public name: string;
 
-  @Column({ type: "integer", reference: '"teste"("id")' })
-  public teste_id: string;
+  @Column({nullable: true})
+  public avatar: string;
+
+  @Column({ type: 'simple-array' })
+  public devices: string[];
 
   // @Column({ type: "varchar" })
   // public country: string;
 
-  // @Column({ type: "simplearray" })
-  // public devices: string[];
+  @OneToMany(() => Playlist, playlist => playlist.user, {cascade: true})
+  public playlists: Playlist[]
 
-  // playlists: any[];
-  // favoritedPlaylists: any[];
-  // likedMusics: any[];
-  // library: any[];
+  @OneToMany(() => Artist, artist => artist.admin, {cascade: true})
+  public artists: Artist[]
+
+  @ManyToMany(() => Playlist, playlist => playlist.usersFavorite, {cascade: true})
+  public favoritePlaylists: any[];
+
+  @ManyToMany(() => Music, music => music.usersLiked, {
+    cascade: true
+  })
+  public likedMusics: User[];
 }
